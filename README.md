@@ -2,7 +2,7 @@ AES-FileCryptor
 ===============
 
 AES-FileCryptor is an executable to encrypt and decrypt files.
-The executable was written and tested in .Net 4.6.2.
+The executable was written and tested in .Net 4.7.
 
 [![Build status](https://ci.appveyor.com/api/projects/status/4extnret9mdkh6kr?svg=true)](https://ci.appveyor.com/project/SeppPenner/aes-filecryptor)
 
@@ -18,4 +18,5 @@ Edit the config.ini file in the application directory: EN and DE are valid input
 Change history
 --------------
 
+* **Version 1.0.0.1 (2018-02-11)** : Switched to .Net to 4.7.
 * **Version 1.0.0.0 (2017-03-22)** : 1.0 release.

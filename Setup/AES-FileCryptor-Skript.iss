@@ -2,10 +2,11 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "AES-FileCryptor"
-#define MyAppVersion "1.0.0.0"
+#define MyAppVersion "1.0.0.1"
 #define MyAppPublisher "Hämmer Electronics"
 #define MyAppURL "http://www.softwareload24.de.tl"
 #define MyAppExeName "AES-FileCryptor.exe"
+#define MyPath "F:\TODO\C# und VB\AES-FileCryptor"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -26,10 +27,10 @@ AppCopyright="Copyright (©) 2015 Hämmer Technologies"
 DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-LicenseFile=C:\Users\Tim\Desktop\AES-FileCryptor\License.txt
-OutputDir=C:\Users\Tim\Desktop\AES-FileCryptor\Setup
+LicenseFile={#MyPath}\License.txt
+OutputDir={#MyPath}\Setup
 OutputBaseFilename=AES-FileCryptor-Setup
-SetupIconFile=C:\Users\Tim\Desktop\AES-FileCryptor\AES.ico
+SetupIconFile={#MyPath}\AES.ico
 Compression=lzma
 SolidCompression=yes
 
@@ -42,9 +43,9 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Files]
-Source: "C:\Users\Tim\Desktop\AES-FileCryptor\AES-FileCryptor\bin\Debug\AES-FileCryptor.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tim\Desktop\AES-FileCryptor\AES-FileCryptor\bin\Debug\Config.ini"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\Tim\Desktop\AES-FileCryptor\AES-FileCryptor\bin\Debug\License.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyPath}\AES-FileCryptor\bin\Debug\AES-FileCryptor.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyPath}\AES-FileCryptor\bin\Debug\Config.ini"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyPath}\AES-FileCryptor\bin\Debug\License.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
