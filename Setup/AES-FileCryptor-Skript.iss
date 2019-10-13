@@ -24,7 +24,7 @@ AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 AppCopyright="Copyright (©) 2015 Hämmer Technologies"
-DefaultDirName={pf}\{#MyAppName}
+DefaultDirName={commonpf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile={#MyPath}\License.txt
@@ -43,9 +43,9 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Files]
-Source: "{#MyPath}\AES-FileCryptor\bin\Debug\AES-FileCryptor.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MyPath}\AES-FileCryptor\bin\Debug\Config.ini"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#MyPath}\AES-FileCryptor\bin\Debug\License.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyPath}\AES-FileCryptor\bin\Release\AES-FileCryptor.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyPath}\AES-FileCryptor\bin\Release\Config.ini"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#MyPath}\AES-FileCryptor\bin\Release\License.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
