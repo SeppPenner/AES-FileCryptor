@@ -8,7 +8,7 @@ The executable was written and tested in .Net 4.8.
 [![GitHub issues](https://img.shields.io/github/issues/SeppPenner/AES-FileCryptor.svg)](https://github.com/SeppPenner/AES-FileCryptor/issues)
 [![GitHub forks](https://img.shields.io/github/forks/SeppPenner/AES-FileCryptor.svg)](https://github.com/SeppPenner/AES-FileCryptor/network)
 [![GitHub stars](https://img.shields.io/github/stars/SeppPenner/AES-FileCryptor.svg)](https://github.com/SeppPenner/AES-FileCryptor/stargazers)
-[![GitHub license](https://img.shields.io/badge/license-AGPL-blue.svg)](https://raw.githubusercontent.com/SeppPenner/AES-FileCryptor/master/License.txt)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://raw.githubusercontent.com/SeppPenner/AES-FileCryptor/master/License.txt)
 [![Known Vulnerabilities](https://snyk.io/test/github/SeppPenner/AES-FileCryptor/badge.svg)](https://snyk.io/test/github/SeppPenner/AES-FileCryptor)
 
 ## Screenshot from the executable english:
