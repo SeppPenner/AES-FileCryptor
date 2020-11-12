@@ -25,10 +25,10 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={commonpf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-LicenseFile=..\src\AES-FileCryptor\bin\Release\License.txt
+LicenseFile=..\src\AESFileCryptor\License.txt
 OutputDir=..\Setup
 OutputBaseFilename=AES-FileCryptor-Setup
-SetupIconFile=..\src\512kBChecker\bin\Release\AES.ico
+SetupIconFile=..\src\AESFileCryptor\AES.ico
 Compression=lzma
 SolidCompression=yes
 
@@ -41,9 +41,9 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Files]
-Source: "..\src\AES-FileCryptor\bin\Release\AES-FileCryptor.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\src\AES-FileCryptor\bin\Release\Config.ini"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\src\AES-FileCryptor\bin\Release\License.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\src\AESFileCryptor\bin\Release\net5.0-windows\AESFileCryptor.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\src\AESFileCryptor\bin\Release\net5.0-windows\Config.ini"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\src\AESFileCryptor\bin\Release\net5.0-windows\License.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
