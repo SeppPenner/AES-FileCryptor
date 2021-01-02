@@ -42,6 +42,7 @@ Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescrip
 
 [Files]
 Source: "..\src\AESFileCryptor\bin\Release\net5.0-windows\AESFileCryptor.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\src\AESFileCryptor\bin\Release\net5.0-windows\AESFileCryptor.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\src\AESFileCryptor\bin\Release\net5.0-windows\Config.ini"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\src\AESFileCryptor\bin\Release\net5.0-windows\License.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
