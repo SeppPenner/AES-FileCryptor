@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "AES-FileCryptor"
-#define MyAppVersion "1.0.2.0"
+#define MyAppVersion "1.0.3.0"
 #define MyAppPublisher "Hämmer Electronics"
 #define MyAppURL "http://www.softwareload24.de.tl"
 #define MyAppExeName "AES-FileCryptor.exe"

@@ -2,7 +2,6 @@ AES-FileCryptor
 ===============
 
 AES-FileCryptor is an executable to encrypt and decrypt files.
-The executable was written and tested in .Net 5.0.
 
 [![Build status](https://ci.appveyor.com/api/projects/status/4extnret9mdkh6kr?svg=true)](https://ci.appveyor.com/project/SeppPenner/aes-filecryptor)
 [![GitHub issues](https://img.shields.io/github/issues/SeppPenner/AES-FileCryptor.svg)](https://github.com/SeppPenner/AES-FileCryptor/issues)
