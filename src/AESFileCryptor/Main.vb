@@ -362,7 +362,7 @@ Public Class Main
     Private Sub EncryptAes(aesKeySize As Integer, decryptedString() As Byte, password As String, isLastBlock As Boolean)
 
         Dim generierterKey As New Rfc2898DeriveBytes(password, _salt)
-        Dim aes As New AesManaged
+        Dim aes As Aes = Aes.Create()
         aes.KeySize = aesKeySize ' möglich sind 128 oder 256 bit
         aes.BlockSize = 128
 
@@ -397,7 +397,7 @@ Public Class Main
 
         Dim generierterKey As New Rfc2898DeriveBytes(password, _salt)
         ' Instanzierung des AES-Algorithmus-Objekts:
-        Dim aes As New AesManaged
+        Dim aes As Aes = Aes.Create()
         ' Ein mit 256 bit verschlüsseltes Byte kann 
         ' auch nur mit 256 bit entschlüsselt werden!
         aes.KeySize = aesKeySize ' möglich sind 128 oder 256 bit
