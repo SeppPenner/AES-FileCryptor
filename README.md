@@ -9,6 +9,9 @@ AES-FileCryptor is an executable to encrypt and decrypt files.
 [![GitHub stars](https://img.shields.io/github/stars/SeppPenner/AES-FileCryptor.svg)](https://github.com/SeppPenner/AES-FileCryptor/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://raw.githubusercontent.com/SeppPenner/AES-FileCryptor/master/License.txt)
 [![Known Vulnerabilities](https://snyk.io/test/github/SeppPenner/AES-FileCryptor/badge.svg)](https://snyk.io/test/github/SeppPenner/AES-FileCryptor)
+[![Blogger](https://img.shields.io/badge/Follow_me_on-blogger-orange)](https://franzhuber23.blogspot.de/)
+[![Patreon](https://img.shields.io/badge/Patreon-F96854?logo=patreon&logoColor=white)](https://patreon.com/SeppPennerOpenSourceDevelopment)
+[![PayPal](https://img.shields.io/badge/PayPal-00457C?logo=paypal&logoColor=white)](https://paypal.me/th070795)
 
 ## Screenshot from the executable English
 ![Screenshot from the executable English](https://github.com/SeppPenner/AES-FileCryptor/blob/master/Screenshot_EN.PNG "Screenshot from the executable English")
