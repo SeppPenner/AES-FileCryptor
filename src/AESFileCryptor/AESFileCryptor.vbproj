@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net9.0-windows</TargetFramework>
+        <TargetFramework>net10.0-windows</TargetFramework>
         <UseWindowsForms>true</UseWindowsForms>
         <ApplicationIcon>AES.ico</ApplicationIcon>
         <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
@@ -13,10 +13,11 @@
         <NoWarn>NU1803</NoWarn>
         <NuGetAuditMode>all</NuGetAuditMode>
         <NuGetAudit>true</NuGetAudit>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="GitVersion.MsBuild" Version="6.0.5">
+        <PackageReference Include="GitVersion.MsBuild" Version="6.8.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
