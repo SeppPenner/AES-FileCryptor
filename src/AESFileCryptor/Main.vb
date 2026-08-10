@@ -49,49 +49,35 @@ Public Class Main
         End Select
     End Sub
 
-    Private Sub EncryptFile(file As String) 'Eingangsdatei als Byte-Array einlesen
+    Private Sub EncryptFile(file As String) 'Eingangsdatei blockweise verschlüsseln
         GC.Collect() 'Garbage-Collector aufrufen
         BytesBereitsGelesen = 0 'BytesBereitsGelesen zurücksetzen
         Dim fInfo As New FileInfo(file) 'FileInfo anlegen
         Dim numBytes As Long = fInfo.Length 'Bytezahl auslesen
-        Dim inStream As New FileStream(file, FileMode.Open, FileAccess.Read) 'FileStream (für Input) öffnen
-        Dim br As New BinaryReader(inStream) 'Reader öffnen
-        Dim data As Byte() 'Datenarray anlegen
-        Dim outStream = New FileStream(Ausgabedateipfad, FileMode.Create) 'FileStream (für Output) öffnen
-        Me.ProgressBar_Verschluesseln.Maximum = numBytes / Blocksize 'Verhältnis ausrechnen
-        If Me.ProgressBar_Verschluesseln.Maximum = 0 Then
-            Me.ProgressBar_Verschluesseln.Maximum = 1
-        End If
-        While BytesBereitsGelesen < numBytes
-            Application.DoEvents() 'Dass Form nicht einfriert
-            If (numBytes - BytesBereitsGelesen) > Blocksize Then
-                Application.DoEvents() 'Dass Form nicht einfriert
-                data = br.ReadBytes(Blocksize) 'Genau Blocksize lesen
-                Application.DoEvents() 'Dass Form nicht einfriert
-                BytesBereitsGelesen = BytesBereitsGelesen + Blocksize 'BytesBereitsGelesen um Blocksize erhöhen
-                Application.DoEvents() 'Dass Form nicht einfriert
-                Call Me.EncryptAes(AesSize, data, Me.RichTextBox_Passwort.Text, False) 'Verschlüsselung aufrufen
-                Application.DoEvents() 'Dass Form nicht einfriert
-                outStream.Write(Me._encryptedString, 0, Me._encryptedString.Length) 'Daten schreiben
-                Application.DoEvents() 'Dass Form nicht einfriert
-                Me.ProgressBar_Verschluesseln.PerformStep() 'Next step
-            Else
-                Application.DoEvents() 'Dass Form nicht einfriert
-                data = br.ReadBytes(numBytes - BytesBereitsGelesen) 'Genau Blocksize lesen
-                Application.DoEvents() 'Dass Form nicht einfriert
-                BytesBereitsGelesen = numBytes 'BytesBereitsGelesen um Blocksize erhöhen
-                Application.DoEvents() 'Dass Form nicht einfriert
-                Call Me.EncryptAes(AesSize, data, Me.RichTextBox_Passwort.Text, True) 'Verschlüsselung aufrufen
-                Application.DoEvents() 'Dass Form nicht einfriert
-                outStream.Write(Me._encryptedString, 0, Me._encryptedString.Length) 'Daten schreiben
-                Application.DoEvents() 'Dass Form nicht einfriert
-                Me.ProgressBar_Verschluesseln.PerformStep() 'Next step
-            End If
-            Application.DoEvents() 'Dass Form nicht einfriert
-        End While
-        outStream.Close() 'FileStream (für Output) schließen
-        inStream.Close() 'FileStream (für Input) schließen
-        br.Close() 'Reader schließen
+        Me.ResetProgressBar(numBytes) 'ProgressBar auf die Anzahl der Blöcke einstellen
+        Using inStream As New FileStream(file, FileMode.Open, FileAccess.Read) 'FileStream (für Input) öffnen
+            Using br As New BinaryReader(inStream) 'Reader öffnen
+                Using outStream As New FileStream(Ausgabedateipfad, FileMode.Create) 'FileStream (für Output) öffnen
+                    Using aes As Aes = Me.CreateAes(AesSize, Me.RichTextBox_Passwort.Text) 'AES-Objekt anlegen
+                        'Ein einziger CryptoStream über die ganze Datei, damit die CBC-Kette nicht pro Block neu
+                        'startet und das Padding genau einmal am Dateiende entsteht:
+                        Using cs As New CryptoStream(outStream, aes.CreateEncryptor(), CryptoStreamMode.Write)
+                            While BytesBereitsGelesen < numBytes
+                                'Höchstens Blocksize lesen, am Dateiende entsprechend weniger:
+                                Dim blockLength As Integer = CInt(Math.Min(Blocksize, numBytes - BytesBereitsGelesen))
+                                Dim data As Byte() = br.ReadBytes(blockLength) 'Block lesen
+                                BytesBereitsGelesen += data.Length 'BytesBereitsGelesen erhöhen
+                                cs.Write(data, 0, data.Length) 'Block verschlüsselt schreiben
+                                Me.ProgressBar_Verschluesseln.PerformStep() 'Next step
+                                Application.DoEvents() 'Dass Form nicht einfriert
+                            End While
+                            cs.FlushFinalBlock() 'Padding schreiben
+                            LastBlockFlushed = True 'LastBlockFlushed auf true setzen
+                        End Using
+                    End Using
+                End Using
+            End Using
+        End Using
         Select Case Me._sprache
             Case "DE"
                 MessageBox.Show("Datei " & Eingabedateipfad & " erfolgreich verschlüsselt!",
@@ -104,49 +90,35 @@ Public Class Main
         Application.DoEvents() 'Dass Form nicht einfriert
     End Sub
 
-    Private Sub DecryptFile(file As String) 'Eingangsdatei als Byte-Array einlesen
+    Private Sub DecryptFile(file As String) 'Eingangsdatei blockweise entschlüsseln
         GC.Collect() 'Garbage-Collector aufrufen
         BytesBereitsGelesen = 0 'BytesBereitsGelesen zurücksetzen
         Dim fInfo As New FileInfo(file) 'FileInfo anlegen
         Dim numBytes As Long = fInfo.Length 'Bytezahl auslesen
-        Dim inStream As New FileStream(file, FileMode.Open, FileAccess.Read) 'FileStream (für Input) öffnen
-        Dim br As New BinaryReader(inStream) 'Reader öffnen
-        Dim data As Byte() 'Datenarray anlegen
-        Dim outStream = New FileStream(Ausgabedateipfad, FileMode.Create) 'FileStream (für Output) öffnen
-        Me.ProgressBar_Verschluesseln.Maximum = numBytes / Blocksize 'Verhältnis ausrechnen
-        If Me.ProgressBar_Verschluesseln.Maximum = 0 Then
-            Me.ProgressBar_Verschluesseln.Maximum = 1
-        End If
-        While BytesBereitsGelesen < numBytes
-            Application.DoEvents() 'Dass Form nicht einfriert
-            If (numBytes - BytesBereitsGelesen) > Blocksize Then
-                Application.DoEvents() 'Dass Form nicht einfriert
-                data = br.ReadBytes(Blocksize) 'Genau Blocksize lesen
-                Application.DoEvents() 'Dass Form nicht einfriert
-                BytesBereitsGelesen = BytesBereitsGelesen + Blocksize 'BytesBereitsGelesen um Blocksize erhöhen
-                Application.DoEvents() 'Dass Form nicht einfriert
-                Call Me.DecryptAes(AesSize, data, Me.RichTextBox_Passwort.Text, False) 'Verschlüsselung aufrufen
-                Application.DoEvents() 'Dass Form nicht einfriert
-                outStream.Write(Me._decryptedString, 0, Me._decryptedString.Length) 'Daten schreiben
-                Application.DoEvents() 'Dass Form nicht einfriert
-                Me.ProgressBar_Verschluesseln.PerformStep() 'Next step
-            Else
-                Application.DoEvents() 'Dass Form nicht einfriert
-                data = br.ReadBytes(numBytes - BytesBereitsGelesen) 'Genau Blocksize lesen
-                Application.DoEvents() 'Dass Form nicht einfriert
-                BytesBereitsGelesen = numBytes 'BytesBereitsGelesen um Blocksize erhöhen
-                Application.DoEvents() 'Dass Form nicht einfriert
-                Call Me.DecryptAes(AesSize, data, Me.RichTextBox_Passwort.Text, True) 'Verschlüsselung aufrufen
-                Application.DoEvents() 'Dass Form nicht einfriert
-                outStream.Write(Me._decryptedString, 0, Me._decryptedString.Length) 'Daten schreiben
-                Application.DoEvents() 'Dass Form nicht einfriert
-                Me.ProgressBar_Verschluesseln.PerformStep() 'Next step
-            End If
-            Application.DoEvents() 'Dass Form nicht einfriert
-        End While
-        outStream.Close() 'FileStream (für Output) schließen
-        inStream.Close() 'FileStream (für Input) schließen
-        br.Close() 'Reader schließen
+        Me.ResetProgressBar(numBytes) 'ProgressBar auf die Anzahl der Blöcke einstellen
+        Using inStream As New FileStream(file, FileMode.Open, FileAccess.Read) 'FileStream (für Input) öffnen
+            Using br As New BinaryReader(inStream) 'Reader öffnen
+                Using outStream As New FileStream(Ausgabedateipfad, FileMode.Create) 'FileStream (für Output) öffnen
+                    Using aes As Aes = Me.CreateAes(AesSize, Me.RichTextBox_Passwort.Text) 'AES-Objekt anlegen
+                        'Ein einziger CryptoStream über die ganze Datei, sonst hält der Decryptor pro Block einen
+                        'Padding-Block zurück, der ohne FlushFinalBlock nie geschrieben wird:
+                        Using cs As New CryptoStream(outStream, aes.CreateDecryptor(), CryptoStreamMode.Write)
+                            While BytesBereitsGelesen < numBytes
+                                'Höchstens Blocksize lesen, am Dateiende entsprechend weniger:
+                                Dim blockLength As Integer = CInt(Math.Min(Blocksize, numBytes - BytesBereitsGelesen))
+                                Dim data As Byte() = br.ReadBytes(blockLength) 'Block lesen
+                                BytesBereitsGelesen += data.Length 'BytesBereitsGelesen erhöhen
+                                cs.Write(data, 0, data.Length) 'Block entschlüsselt schreiben
+                                Me.ProgressBar_Verschluesseln.PerformStep() 'Next step
+                                Application.DoEvents() 'Dass Form nicht einfriert
+                            End While
+                            cs.FlushFinalBlock() 'Padding entfernen
+                            LastBlockFlushed = True 'LastBlockFlushed auf true setzen
+                        End Using
+                    End Using
+                End Using
+            End Using
+        End Using
         Select Case Me._sprache
             Case "DE"
                 MessageBox.Show("Datei " & Eingabedateipfad & " erfolgreich entschlüsselt!",
@@ -224,127 +196,73 @@ Public Class Main
     End Sub
 
     Private Sub Button_Verschluesseln_Click(sender As Object, e As EventArgs) Handles Button_Verschluesseln.Click _
-        'Text verschlüsseln
+        'Datei verschlüsseln
         Try
             LastBlockFlushed = False 'LastBlockFlushed auf false setzen
             Me.ProgressBar_Verschluesseln.Value = 0 'ProgressBar_Verschluesseln zurücksetzen
-            Select Case Me.ComboBox_Art.SelectedIndex
-                Case 0 'AES-256 ausgewählt
-                    AesSize = 256 'AESSize auf 256 setzen
-                    If Me.RichTextBox_Passwort.Text = "" Or Me.Label_Eingabedatei.Text = "" Then 'Wenn Felder leer sind
-                        Select Case Me._sprache
-                            Case "DE"
-                                MessageBox.Show("Passwort oder Dateieingabe ist leer") 'Fehlermeldung ausgeben
-                            Case Else
-                                MessageBox.Show("Password or file input is empty") 'Fehlermeldung ausgeben
-                        End Select
-                    Else 'Wenn Felder gefüllt sind
-                        If Me.RichTextBox_Salt.TextLength < 8 Then 'Wenn Saltwert zu klein ist
-                            Select Case Me._sprache
-                                Case "DE"
-                                    MessageBox.Show("Saltwert muss mindestens 8 Zeichen enthalten") _
-                                    'Fehlermeldung ausgeben
-                                Case Else
-                                    MessageBox.Show("Salt value must contain at least 8 characters") _
-                                    'Fehlermeldung ausgeben
-                            End Select
-                        Else
-                            Me._salt = Encoding.UTF32.GetBytes(Me.RichTextBox_Salt.Text) 'Salt aus Benutzereingabe auslesen
-                            Call Me.EncryptFile(Me.Label_Eingabedatei.Text) 'Datei verschlüsseln
-                        End If
-                    End If
-                Case 1 'AES-128 ausgewählt
-                    AesSize = 128 'AESSize auf 128 setzen
-                    If Me.RichTextBox_Passwort.Text = "" Or Me.Label_Eingabedatei.Text = "" Then 'Wenn Felder leer sind
-                        Select Case Me._sprache
-                            Case "DE"
-                                MessageBox.Show("Passwort oder Dateieingabe ist leer") 'Fehlermeldung ausgeben
-                            Case Else
-                                MessageBox.Show("Password or file input is empty") 'Fehlermeldung ausgeben
-                        End Select
-                    Else 'Wenn Felder gefüllt sind
-
-                        If Me.RichTextBox_Salt.TextLength < 8 Then 'Wenn Saltwert zu klein ist
-                            Select Case Me._sprache
-                                Case "DE"
-                                    MessageBox.Show("Saltwert muss mindestens 8 Zeichen enthalten") _
-                                    'Fehlermeldung ausgeben
-                                Case Else
-                                    MessageBox.Show("Salt value must contain at least 8 characters") _
-                                    'Fehlermeldung ausgeben
-                            End Select
-                        Else
-                            Me._salt = Encoding.UTF32.GetBytes(Me.RichTextBox_Salt.Text) 'Salt aus Benutzereingabe auslesen
-                            Call Me.EncryptFile(Me.Label_Eingabedatei.Text) 'Datei verschlüsseln
-                        End If
-                    End If
-            End Select
+            If Me.PrepareCryptoRun() = False Then 'Eingaben prüfen, AesSize und Salt setzen
+                Return
+            End If
+            Call Me.EncryptFile(Me.Label_Eingabedatei.Text) 'Datei verschlüsseln
         Catch ex As Exception
             Me.WriteToLog(ex.ToString) 'Fehler ausgeben in Log-Datei
             MessageBox.Show(ex.ToString) 'Fehlermeldung ausgeben
         End Try
     End Sub
 
-    Private Sub Button_Entschluesseln_Click(sender As Object, e As EventArgs) Handles Button_Entschluesseln.Click
+    Private Sub Button_Entschluesseln_Click(sender As Object, e As EventArgs) Handles Button_Entschluesseln.Click _
+        'Datei entschlüsseln
         Try
             LastBlockFlushed = False 'LastBlockFlushed auf false setzen
             Me.ProgressBar_Verschluesseln.Value = 0 'ProgressBar_Verschluesseln zurücksetzen
-            Select Case Me.ComboBox_Art.SelectedIndex
-                Case 0 'AES-256 ausgewählt
-                    AesSize = 256 'AESSize auf 256 setzen
-                    If Me.RichTextBox_Passwort.Text = "" Or Me.Label_Eingabedatei.Text = "" Then 'Wenn Felder leer sind
-                        Select Case Me._sprache
-                            Case "DE"
-                                MessageBox.Show("Passwort oder Dateieingabe ist leer") 'Fehlermeldung ausgeben
-                            Case Else
-                                MessageBox.Show("Password or file input is empty") 'Fehlermeldung ausgeben
-                        End Select
-                    Else 'Wenn Felder gefüllt sind
-
-                        If Me.RichTextBox_Salt.TextLength < 8 Then 'Wenn Saltwert zu klein ist
-                            Select Case Me._sprache
-                                Case "DE"
-                                    MessageBox.Show("Saltwert muss mindestens 8 Zeichen enthalten") _
-                                    'Fehlermeldung ausgeben
-                                Case Else
-                                    MessageBox.Show("Salt value must contain at least 8 characters") _
-                                    'Fehlermeldung ausgeben
-                            End Select
-                        Else
-                            Me._salt = Encoding.UTF32.GetBytes(Me.RichTextBox_Salt.Text) 'Salt aus Benutzereingabe auslesen
-                            Call Me.DecryptFile(Me.Label_Eingabedatei.Text) 'Datei entschlüsseln
-                        End If
-                    End If
-                Case 1 'AES-128 ausgewählt
-                    AesSize = 128 'AESSize auf 128 setzen
-                    If Me.RichTextBox_Passwort.Text = "" Or Me.Label_Eingabedatei.Text = "" Then 'Wenn Felder leer sind
-                        Select Case Me._sprache
-                            Case "DE"
-                                MessageBox.Show("Passwort oder Dateieingabe ist leer") 'Fehlermeldung ausgeben
-                            Case Else
-                                MessageBox.Show("Password or file input is empty") 'Fehlermeldung ausgeben
-                        End Select
-                    Else 'Wenn Felder gefüllt sind
-
-                        If Me.RichTextBox_Salt.TextLength < 8 Then 'Wenn Saltwert zu klein ist
-                            Select Case Me._sprache
-                                Case "DE"
-                                    MessageBox.Show("Saltwert muss mindestens 8 Zeichen enthalten") _
-                                    'Fehlermeldung ausgeben
-                                Case Else
-                                    MessageBox.Show("Salt value must contain at least 8 characters") _
-                                    'Fehlermeldung ausgeben
-                            End Select
-                        Else
-                            Me._salt = Encoding.UTF32.GetBytes(Me.RichTextBox_Salt.Text) 'Salt aus Benutzereingabe auslesen
-                            Call Me.DecryptFile(Me.Label_Eingabedatei.Text) 'Datei entschlüsseln
-                        End If
-                    End If
-            End Select
+            If Me.PrepareCryptoRun() = False Then 'Eingaben prüfen, AesSize und Salt setzen
+                Return
+            End If
+            Call Me.DecryptFile(Me.Label_Eingabedatei.Text) 'Datei entschlüsseln
         Catch ex As Exception
             Me.WriteToLog(ex.ToString) 'Fehler ausgeben in Log-Datei
             MessageBox.Show(ex.ToString) 'Fehlermeldung ausgeben
         End Try
+    End Sub
+
+    Private Function PrepareCryptoRun() As Boolean 'Eingaben prüfen, AesSize und Salt setzen
+        Select Case Me.ComboBox_Art.SelectedIndex
+            Case 1 'AES-128 ausgewählt
+                AesSize = 128 'AesSize auf 128 setzen
+            Case Else 'AES-256 ausgewählt
+                AesSize = 256 'AesSize auf 256 setzen
+        End Select
+        'Wenn Felder leer sind:
+        If Me.RichTextBox_Passwort.Text = "" Or Me.Label_Eingabedatei.Text = "" Or
+           Me.Label_Ausgabedatei.Text = "" Then
+            Select Case Me._sprache
+                Case "DE"
+                    MessageBox.Show("Passwort, Dateieingabe oder Dateiausgabe ist leer") 'Fehlermeldung ausgeben
+                Case Else
+                    MessageBox.Show("Password, file input or file output is empty") 'Fehlermeldung ausgeben
+            End Select
+            Return False
+        End If
+        If Me.RichTextBox_Salt.TextLength < 8 Then 'Wenn Saltwert zu klein ist
+            Select Case Me._sprache
+                Case "DE"
+                    MessageBox.Show("Saltwert muss mindestens 8 Zeichen enthalten") 'Fehlermeldung ausgeben
+                Case Else
+                    MessageBox.Show("Salt value must contain at least 8 characters") 'Fehlermeldung ausgeben
+            End Select
+            Return False
+        End If
+        Me._salt = Encoding.UTF32.GetBytes(Me.RichTextBox_Salt.Text) 'Salt aus Benutzereingabe auslesen
+        Return True
+    End Function
+
+    Private Sub ResetProgressBar(numBytes As Long) 'ProgressBar auf die Anzahl der Blöcke einstellen
+        Me.ProgressBar_Verschluesseln.Value = 0 'ProgressBar_Verschluesseln zurücksetzen
+        Dim blockCount As Integer = CInt(Math.Ceiling(numBytes / Blocksize)) 'Anzahl der Blöcke ausrechnen
+        If blockCount < 1 Then
+            blockCount = 1
+        End If
+        Me.ProgressBar_Verschluesseln.Maximum = blockCount 'Maximum setzen
     End Sub
 
     Private Sub Button_Alle_Resetten_Click(sender As Object, e As EventArgs) Handles Button_Alle_Resetten.Click
@@ -355,83 +273,28 @@ Public Class Main
         Me.ProgressBar_Verschluesseln.Value = 0 'ProgressBar_Verschluesseln resetten
     End Sub
 
-    Private _encryptedString() As Byte
-    Private _decryptedString() As Byte
-
-    ' Verschlüsseln
-    Private Sub EncryptAes(aesKeySize As Integer, decryptedString() As Byte, password As String, isLastBlock As Boolean)
-
-        Dim generierterKey As New Rfc2898DeriveBytes(password, Me._salt, 600000, HashAlgorithmName.SHA256)
+    ' AES-Objekt mit Schlüssel und IV aus Passwort und Salt anlegen. Ein mit 256 bit verschlüsseltes Byte kann
+    ' auch nur mit 256 bit entschlüsselt werden, die Schlüsselgröße muss also zur Datei passen.
+    Private Function CreateAes(aesKeySize As Integer, password As String) As Aes
         Dim aes As Aes = Aes.Create()
         aes.KeySize = aesKeySize ' möglich sind 128 oder 256 bit
         aes.BlockSize = 128
 
-        ' Algorithmus initialisieren:
-        aes.Key = generierterKey.GetBytes(aes.KeySize \ 8)
-        aes.IV = generierterKey.GetBytes(aes.BlockSize \ 8)
-
-        ' Memory-Stream und Crypto-Stream erzeugen -> CreateEncryptor()
-        Dim ms As New MemoryStream
-        Dim cs As New CryptoStream(ms, aes.CreateEncryptor(),
-                                   CryptoStreamMode.Write)
-
-        ' Daten verschlüsseln:
-        Dim data() As Byte
-        data = decryptedString
-        cs.Write(data, 0, data.Length)
-        If isLastBlock = True Then
-            cs.FlushFinalBlock()
-            cs.Close()
-            LastBlockFlushed = True
-        End If
-
-        ' Verschlüsselte Daten als Byte ausgeben: 
-        Me._encryptedString = ms.ToArray
-        ms.Close()
-
-        aes.Clear()
-    End Sub
-
-    ' Entschlüsseln
-    Private Sub DecryptAes(aesKeySize As Int32, encryptedString() As Byte, password As String, isLastBlock As Boolean)
-
-        Dim generierterKey As New Rfc2898DeriveBytes(password, Me._salt, 600000, HashAlgorithmName.SHA256)
-        ' Instanzierung des AES-Algorithmus-Objekts:
-        Dim aes As Aes = Aes.Create()
-        ' Ein mit 256 bit verschlüsseltes Byte kann 
-        ' auch nur mit 256 bit entschlüsselt werden!
-        aes.KeySize = aesKeySize ' möglich sind 128 oder 256 bit
-        aes.BlockSize = 128
-
-        ' Algorithmus initialisieren:
-        aes.Key = generierterKey.GetBytes(aes.KeySize \ 8)
-        aes.IV = generierterKey.GetBytes(aes.BlockSize \ 8)
-
-        ' Memory-Stream und Crypto-Stream erzeugen -> CreateDecryptor()
-        Dim ms As New MemoryStream
-        Dim cs As New CryptoStream(ms, aes.CreateDecryptor(),
-                                   CryptoStreamMode.Write)
-
-        Try ' Daten entschlüsseln:
-            Dim data() As Byte
-            data = encryptedString
-            cs.Write(data, 0, data.Length)
-            If isLastBlock = True Then
-                cs.FlushFinalBlock()
-                cs.Close()
-                LastBlockFlushed = True
-            End If
-
-            ' Die entschlüsselten Daten als Byte ausgeben: 
-            Me._decryptedString = ms.ToArray
-            ms.Close()
-
-            aes.Clear()
-        Catch ex As Exception
-            Me.WriteToLog(ex.ToString) 'Fehler ausgeben in Log-Datei
-            MessageBox.Show(ex.ToString)
-        End Try
-    End Sub
+        ' Algorithmus initialisieren. Schlüssel und IV werden in einem Zug abgeleitet, das ergibt genau
+        ' dieselben Bytes wie zwei aufeinanderfolgende GetBytes-Aufrufe auf einem Rfc2898DeriveBytes-Objekt,
+        ' deren Konstruktoren seit .NET 10 veraltet sind:
+        Dim keyLength As Integer = aes.KeySize \ 8
+        Dim ivLength As Integer = aes.BlockSize \ 8
+        Dim generierterKey As Byte() = Rfc2898DeriveBytes.Pbkdf2(password, Me._salt, 600000,
+                                                                 HashAlgorithmName.SHA256, keyLength + ivLength)
+        Dim key(keyLength - 1) As Byte
+        Dim iv(ivLength - 1) As Byte
+        Array.Copy(generierterKey, 0, key, 0, keyLength)
+        Array.Copy(generierterKey, keyLength, iv, 0, ivLength)
+        aes.Key = key
+        aes.IV = iv
+        Return aes
+    End Function
 
     Private Sub Button_Eingabe_Click(sender As Object, e As EventArgs) Handles Button_Eingabe.Click
         If Me.OpenFileDialog_Eingabe.ShowDialog() = DialogResult.OK Then
@@ -465,18 +328,8 @@ Public Class Main
                 Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory() & "log\") 'Verzeichnis erstellen
             End If
             'Datum anpassen
-            Dim currentDateMonth
-            If Date.Today.Month < 10 Then
-                currentDateMonth = "0" & Date.Today.Month
-            Else
-                currentDateMonth = Date.Today.Month
-            End If
-            Dim currentDateDay
-            If Date.Today.Day < 10 Then
-                currentDateDay = "0" & Date.Today.Day
-            Else
-                currentDateDay = Date.Today.Day
-            End If
+            Dim currentDateMonth As String = Date.Today.Month.ToString("00")
+            Dim currentDateDay As String = Date.Today.Day.ToString("00")
             'Dateipfad anlegen:
             Dim dateipfad As String = AppDomain.CurrentDomain.BaseDirectory() & "log\" & Date.Today.Year & "_" &
                                       currentDateMonth & "_" & currentDateDay & "_" & ".txt"
