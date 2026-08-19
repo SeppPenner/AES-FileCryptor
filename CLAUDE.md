@@ -4,7 +4,9 @@
 
 AES-FileCryptor is a small Windows Forms application written in **Visual Basic** that encrypts and
 decrypts arbitrary files with AES. It is a program, **not** a library: no `GeneratePackageOnBuild`,
-no NuGet push script. It ships as an Inno Setup installer that is committed into this repository.
+no NuGet push script. It ships as an Inno Setup installer that is attached to the GitHub release of
+the version tag. Up to and including version 1.0.8 the installer was committed into `Setup/`
+instead, which is why the git history carries one copy per release.
 
 One solution `src/AESFileCryptor.sln` with exactly one project:
 
@@ -26,9 +28,9 @@ Layout inside `src/AESFileCryptor`:
 
 Repository root: `README.md` (the only user documentation), `Changelog.md`, `License.txt` (MIT),
 `Screenshot_DE.PNG`, `Screenshot_EN.PNG`, `.gitattributes` and `.gitignore`. `Setup/` holds the
-Inno Setup script `AES-FileCryptor-Skript.iss`, the publish helper `build-setup-files.bat` and the
-committed installer `AES-FileCryptor-Setup.exe`. There is no test project, no `Directory.Build.props`
-and no `.github` folder.
+Inno Setup script `AES-FileCryptor-Skript.iss` and the publish helper `build-setup-files.bat`. The
+built installer `AES-FileCryptor-Setup.exe` lands there during a build but is not tracked. There is
+no test project, no `Directory.Build.props` and no `.github` folder.
 
 ## Build
 
@@ -133,9 +135,10 @@ Do not silently "clean up" these, they are existing behaviour:
   configured outside of this repository. There is no pipeline file here.
 - **`.gitattributes` sets `* text=auto`** and every rule of the Visual Studio template below it is
   commented out. A new binary file needs its own rule.
-- **The installer is committed.** `Setup/AES-FileCryptor-Setup.exe` is tracked although `.gitignore`
-  excludes `*.exe`, so it needs `git add -f`. Self contained since 1.0.8.0, which grows the
-  repository by roughly 35 MB per release.
+- **The installer belongs on the release, not into a commit.** `Setup/AES-FileCryptor-Setup.exe` was
+  tracked up to and including 1.0.8, added with `git add -f` against the `*.exe` rule of
+  `.gitignore`. Self contained since 1.0.8.0, that is roughly 35 MB per release, and every committed
+  copy stays in the history for good. Do not add it back.
 
 ## Releasing
 
@@ -150,12 +153,30 @@ Do not silently "clean up" these, they are existing behaviour:
    tags are lightweight tags, create new ones the same way.
 6. **Only then** build the installer: `Setup/build-setup-files.bat`, then `ISCC.exe` on the script.
    Tag first, otherwise GitVersion burns a prerelease version into the shipped executable.
-7. `git add -f Setup/AES-FileCryptor-Setup.exe` and commit it.
-8. Push the commits and the tag.
+7. Push the commits and the tag.
+8. Attach `Setup/AES-FileCryptor-Setup.exe` to the GitHub release of that tag. **Never commit the
+   installer.** `Setup/` is the `OutputDir` of the Inno Setup script, so the file lands there during
+   the build and `.gitignore` covers it afterwards.
 
 The version in the `Changelog.md` has four parts (`1.0.8.0`), the tag has three (`1.0.8`).
 GitVersion turns the tag into the assembly version, so an untagged commit produces something like
 `1.0.8-1+Branch.master.Sha...`.
+
+For step 8 there is no `gh` on this machine. The GitHub API does the job, with the token that
+`git push` already uses, so nothing has to be stored anywhere:
+
+```bash
+c=$(printf "protocol=https\nhost=github.com\n\n" | git credential fill)
+tok=$(printf "%s" "$c" | grep '^password=' | cut -d= -f2-)
+id=$(curl -s -X POST -H "Authorization: Bearer $tok" \
+  https://api.github.com/repos/SeppPenner/AES-FileCryptor/releases \
+  -d '{"tag_name":"1.0.9","name":"1.0.9"}' | grep -m1 '"id"' | tr -dc 0-9)
+curl -s -X POST -H "Authorization: Bearer $tok" -H "Content-Type: application/octet-stream" \
+  --data-binary @Setup/AES-FileCryptor-Setup.exe \
+  "https://uploads.github.com/repos/SeppPenner/AES-FileCryptor/releases/$id/assets?name=AES-FileCryptor-Setup.exe"
+```
+
+Never print that token, and never write it into a file.
 
 ## Git
 
